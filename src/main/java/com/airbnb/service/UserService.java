@@ -13,9 +13,11 @@ import java.util.Optional;
 public class UserService {
 
     private PropartyUserRepository userRepository;
+    private JWTService jwtService;
 
-    public UserService(PropartyUserRepository userRepository) {
+    public UserService(PropartyUserRepository userRepository, JWTService jwtService) {
         this.userRepository = userRepository;
+        this.jwtService = jwtService;
     }
 
 
@@ -31,12 +33,14 @@ public class UserService {
         return  user;
     }
 
-    public boolean verifyLogin(LoginDto loginDto) {
+    public String verifyLogin(LoginDto loginDto) {
         Optional<PropartyUser> opUser = userRepository.findByUserName(loginDto.getUserName());
         if(opUser.isPresent()){
             PropartyUser user = opUser.get();
-            return BCrypt.checkpw(loginDto.getPassword(), user.getPassword());
+            if (BCrypt.checkpw(loginDto.getPassword(), user.getPassword())){
+               return jwtService.generateToken(user);
+            }
         }
-        return false;
+        return null;
     }
 }
